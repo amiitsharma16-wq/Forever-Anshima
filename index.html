@@ -1,0 +1,511 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Anshima ❤️</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .font-dancing { font-family: 'Dancing Script', cursive; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 77, 109, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 77, 109, 0.8); }
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes rain-fall {
+            0% { transform: translateY(-10vh); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(110vh); opacity: 0; }
+        }
+        @keyframes petal-fall {
+            0% { transform: translateY(-10vh) rotate(0deg) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg) translateX(50px); opacity: 0; }
+        }
+        @keyframes float-up {
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1.5) rotate(45deg); opacity: 0; }
+        }
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-black text-white font-poppins min-h-screen flex items-center justify-center overflow-x-hidden">
+
+    <!-- Global Music Player Audio Element -->
+    <audio id="bgAudio" src="O Sanam.mp3"></audio>
+
+    <!-- Global Floating Music Controller Button (Appears after Stage 1) -->
+    <button id="musicToggleBtn" onclick="toggleMusic()" class="hidden fixed top-4 right-4 z-50 p-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white/20 transition-all cursor-pointer">
+        <i data-lucide="play" id="musicIcon"></i>
+    </button>
+
+    <!-- Container matching mobile screen ratio -->
+    <div id="appContainer" class="relative w-full max-w-md h-[100dvh] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700">
+        <!-- Dynamic Stage Content Injected via JavaScript -->
+    </div>
+
+    <script>
+        // --- SOUND & STATE MANAGEMENT ---
+        const audio = document.getElementById('bgAudio');
+        audio.loop = false;
+        let currentStage = 0;
+
+        function startMusicAt116() {
+            try {
+                audio.currentTime = 76; // 1 min 16 sec
+                audio.play().then(() => {
+                    document.getElementById('musicToggleBtn').classList.remove('hidden');
+                    document.getElementById('musicIcon').setAttribute('data-lucide', 'pause');
+                    lucide.createIcons();
+                }).catch(e => console.log("Audio play blocked", e));
+            } catch(err) { console.log(err); }
+        }
+
+        function toggleMusic() {
+            const icon = document.getElementById('musicIcon');
+            if (audio.paused) {
+                audio.play();
+                icon.setAttribute('data-lucide', 'pause');
+            } else {
+                audio.pause();
+                icon.setAttribute('data-lucide', 'play');
+            }
+            lucide.createIcons();
+        }
+
+        audio.addEventListener('ended', () => {
+            document.getElementById('musicIcon').setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+        });
+
+        // Background Star Generator
+        function renderStars(count = 50) {
+            let html = '<div class="fixed inset-0 pointer-events-none z-[-1]">';
+            for(let i=0; i<count; i++) {
+                const size = Math.random() * 3 + 1;
+                html += `<div class="absolute bg-white rounded-full" style="width: ${size}px; height: ${size}px; left: ${Math.random()*100}vw; top: ${Math.random()*100}vh; animation: twinkle ${Math.random()*3+2}s infinite ${Math.random()*2}s"></div>`;
+            }
+            return html + '</div>';
+        }
+
+        function renderRosePetals() {
+            let html = '<div class="fixed inset-0 pointer-events-none z-40">';
+            for(let i=0; i<40; i++) {
+                html += `<div class="absolute bg-rose-500 opacity-80" style="width: 15px; height: 15px; border-radius: 15px 0 15px 0; left: ${Math.random()*100}vw; top: -10vh; animation: petal-fall ${Math.random()*5+4}s linear infinite ${Math.random()*5}s"></div>`;
+            }
+            return html + '</div>';
+        }
+
+        // --- STAGE RENDERERS ---
+
+        function loadStage(stageNum) {
+            currentStage = stageNum;
+            const container = document.getElementById('appContainer');
+            container.style.opacity = 0;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+                if (stageNum === 0) renderStageLoading(container);
+                else if (stageNum === 1) renderStageGiftBox(container);
+                else if (stageNum === 2) renderStageLoveLetter(container);
+                else if (stageNum === 3) renderStageMemories(container);
+                else if (stageNum === 4) renderStageMagicButtons(container);
+                else if (stageNum === 5) renderStageTimeline(container);
+                else if (stageNum === 6) renderStageStars(container);
+                else if (stageNum === 7) renderStageFinalSurprise(container);
+                else if (stageNum === 8) renderStageLastScreen(container);
+
+                lucide.createIcons();
+                container.style.opacity = 1;
+            }, 300);
+        }
+
+        // 1. Loading Screen
+        function renderStageLoading(container) {
+            container.innerHTML = `
+                ${renderStars(30)}
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    <div id="loadText" class="text-lg font-medium text-pink-200 h-20 flex items-center justify-center">Loading the most precious person in my life... ❤️</div>
+                </div>
+            `;
+            setTimeout(() => {
+                document.getElementById('loadText').innerHTML = "Hello Baby...";
+                document.getElementById('loadText').className = "text-2xl font-dancing text-white h-20 flex items-center justify-center";
+            }, 3500);
+            setTimeout(() => {
+                document.getElementById('loadText').innerHTML = "I made something only for you...";
+                document.getElementById('loadText').className = "text-lg font-medium text-pink-200 h-20 flex items-center justify-center";
+            }, 6000);
+            setTimeout(() => {
+                container.innerHTML += `
+                    <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center animate-fade-in z-20">
+                        <i data-lucide="heart" class="text-red-500 w-20 h-20 animate-pulse-glow fill-red-500 cursor-pointer hover:scale-110 transition-transform" onclick="loadStage(1)"></i>
+                        <p class="mt-4 text-sm text-gray-400 animate-pulse">Click the heart to continue</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }, 9000);
+        }
+
+        // 2. Gift Box
+        function renderStageGiftBox(container) {
+            container.innerHTML = `
+                ${renderStars(40)}
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-purple-900/50 to-black">
+                    <div id="giftBox" class="text-[8rem] cursor-pointer animate-float transition-all duration-700 hover:scale-110" onclick="openGift()">🎁</div>
+                    <div id="giftText" class="mt-12 text-center animate-pulse">
+                        <p class="text-xl font-semibold text-pink-300 mb-2">Tap to Open</p>
+                        <p class="text-sm text-gray-400">Your Surprise Awaits 🎵</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openGift() {
+            startMusicAt116();
+            document.getElementById('giftBox').classList.add('scale-125', 'opacity-0');
+            document.getElementById('giftText').style.display = 'none';
+            
+            // Add Confetti
+            let confettiHTML = '<div class="fixed inset-0 pointer-events-none z-50">';
+            const colors = ['#ff4d6d', '#fde047', '#60a5fa', '#34d399', '#a78bfa'];
+            for(let i=0; i<70; i++) {
+                confettiHTML += `<div class="absolute" style="width: 8px; height: 8px; background-color: ${colors[Math.floor(Math.random()*colors.length)]}; left: ${Math.random()*100}vw; top: -10vh; animation: rain-fall ${Math.random()*3+2}s linear infinite ${Math.random()*2}s"></div>`;
+            }
+            confettiHTML += '</div>';
+            document.body.innerHTML += confettiHTML;
+
+            setTimeout(() => loadStage(2), 2500);
+        }
+
+        // 3. Love Letter
+        function renderStageLoveLetter(container) {
+            container.innerHTML = `
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-pink-900/40 to-purple-900/40">
+                    <div class="glass-card w-full max-w-sm p-8 relative overflow-hidden shadow-[0_0_40px_rgba(255,77,109,0.2)]">
+                        <div class="text-gray-100 font-poppins leading-relaxed text-sm md:text-base">
+                            Dear Baby,<br><br>
+                            Happy Girlfriend's Day ❤️<br><br>
+                            Shayad main words me kabhi perfectly express na kar paun...<br><br>
+                            Lekin ek baat hamesha sach rahegi...<br><br>
+                            Tum meri life ka sabse beautiful part ho.<br><br>
+                            Thank you for being you.<br><br>
+                            Love You Forever ❤️
+                        </div>
+                    </div>
+                    <div class="mt-10">
+                        <button onclick="loadStage(3)" class="flex flex-col items-center text-pink-300 hover:text-pink-400 cursor-pointer">
+                            <span class="mb-2 font-medium">Scroll down</span>
+                            <i data-lucide="chevron-down" class="animate-bounce w-8 h-8"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 4. Secret Memories
+        function renderStageMemories(container) {
+            container.innerHTML = `
+                <div class="absolute inset-0 overflow-y-auto p-6 pb-24 no-scrollbar">
+                    <h2 class="text-3xl font-dancing text-center text-pink-300 mt-8 mb-8">Our Secret Memories</h2>
+                    <div class="flex flex-col gap-8">
+                        <div class="flex flex-col items-center">
+                            <div id="mem1" class="relative w-full aspect-square rounded-2xl overflow-hidden glass-card bg-black/40 flex items-center justify-center p-2 shadow-xl cursor-pointer" onclick="unlockMem(1)">
+                                <img src="snapchat1.jpg" alt="Memory 1" class="w-full h-full object-contain rounded-xl scale-110 blur-xl grayscale transition-all duration-1000" onerror="this.src='https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&q=80'">
+                                <div id="lock1" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+                                    <div class="bg-white/10 p-4 rounded-full backdrop-blur-md mb-4 border border-white/20"><i data-lucide="lock" class="text-pink-300 w-8 h-8"></i></div>
+                                    <span class="text-white font-medium tracking-wide">Unlock My Memories ❤️</span>
+                                </div>
+                            </div>
+                            <p id="cap1" class="mt-4 text-pink-200 font-dancing text-2xl opacity-0 transition-opacity duration-700">My Favorite Smile ❤️</p>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <div id="mem2" class="relative w-full aspect-square rounded-2xl overflow-hidden glass-card bg-black/40 flex items-center justify-center p-2 shadow-xl cursor-pointer" onclick="unlockMem(2)">
+                                <img src="snapchat2.jpg" alt="Memory 2" class="w-full h-full object-contain rounded-xl scale-110 blur-xl grayscale transition-all duration-1000" onerror="this.src='https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80'">
+                                <div id="lock2" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+                                    <div class="bg-white/10 p-4 rounded-full backdrop-blur-md mb-4 border border-white/20"><i data-lucide="lock" class="text-pink-300 w-8 h-8"></i></div>
+                                    <span class="text-white font-medium tracking-wide">Unlock My Memories ❤️</span>
+                                </div>
+                            </div>
+                            <p id="cap2" class="mt-4 text-pink-200 font-dancing text-2xl opacity-0 transition-opacity duration-700">My Beautiful Baby 🌸</p>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <div id="mem3" class="relative w-full aspect-square rounded-2xl overflow-hidden glass-card bg-black/40 flex items-center justify-center p-2 shadow-xl cursor-pointer" onclick="unlockMem(3)">
+                                <img src="snapchat3.jpg" alt="Memory 3" class="w-full h-full object-contain rounded-xl scale-110 blur-xl grayscale transition-all duration-1000" onerror="this.src='https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&q=80'">
+                                <div id="lock3" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+                                    <div class="bg-white/10 p-4 rounded-full backdrop-blur-md mb-4 border border-white/20"><i data-lucide="lock" class="text-pink-300 w-8 h-8"></i></div>
+                                    <span class="text-white font-medium tracking-wide">Unlock My Memories ❤️</span>
+                                </div>
+                            </div>
+                            <p id="cap3" class="mt-4 text-pink-200 font-dancing text-2xl opacity-0 transition-opacity duration-700">The Girl Who Changed Everything ❤️</p>
+                        </div>
+                    </div>
+                    
+                    <div id="nextMemBtn" class="mt-12 flex justify-center pb-12 hidden">
+                        <button onclick="loadStage(4)" class="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-full font-medium transition-all shadow-[0_0_20px_rgba(219,39,119,0.4)] flex items-center gap-2 cursor-pointer">
+                            Explore More <i data-lucide="sparkles"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        const unlocked = { 1: false, 2: false, 3: false };
+        function unlockMem(id) {
+            unlocked[id] = true;
+            const mem = document.querySelector(`#mem${id} img`);
+            const lock = document.getElementById(`lock${id}`);
+            const cap = document.getElementById(`cap${id}`);
+            
+            mem.classList.remove('scale-110', 'blur-xl', 'grayscale');
+            lock.style.display = 'none';
+            cap.style.opacity = '1';
+
+            if (unlocked[1] && unlocked[2] && unlocked[3]) {
+                document.getElementById('nextMemBtn').classList.remove('hidden');
+            }
+        }
+
+        // 5. Four Magic Buttons
+        function renderStageMagicButtons(container) {
+            container.innerHTML = `
+                <div class="absolute inset-0 p-6 flex flex-col items-center justify-center">
+                    <h2 class="text-3xl font-dancing text-pink-300 mb-8 text-center">Four Magic Buttons</h2>
+                    <div class="grid grid-cols-1 gap-4 w-full max-w-sm">
+                        <button onclick="openMagic('sad')" class="glass-card p-5 flex items-center gap-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-pink-500/30 hover:scale-[1.02] transition-transform text-left cursor-pointer">
+                            <span class="text-3xl">💖</span><span class="font-medium text-gray-100">Open When You Are Sad</span>
+                        </button>
+                        <button onclick="openMagic('miss')" class="glass-card p-5 flex items-center gap-4 bg-gradient-to-r from-indigo-600/20 to-blue-900/20 border border-indigo-500/30 hover:scale-[1.02] transition-transform text-left cursor-pointer">
+                            <span class="text-3xl">😊</span><span class="font-medium text-gray-100">Open When You Miss Me</span>
+                        </button>
+                        <button onclick="openMagic('smile')" class="glass-card p-5 flex items-center gap-4 bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-orange-400/30 hover:scale-[1.02] transition-transform text-left cursor-pointer">
+                            <span class="text-3xl">😂</span><span class="font-medium text-gray-100">Open When You Want To Smile</span>
+                        </button>
+                        <button onclick="openMagic('sleep')" class="glass-card p-5 flex items-center gap-4 bg-gradient-to-r from-gray-800/40 to-black/60 border border-gray-500/30 hover:scale-[1.02] transition-transform text-left cursor-pointer">
+                            <span class="text-3xl">🌙</span><span class="font-medium text-gray-100">Open Before Sleeping</span>
+                        </button>
+                    </div>
+                    <button onclick="loadStage(5)" class="mt-12 text-gray-400 hover:text-white flex items-center gap-2 cursor-pointer">
+                        Skip for now <i data-lucide="chevron-down" size="16"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function openMagic(type) {
+            const container = document.getElementById('appContainer');
+            if (type === 'sad') {
+                container.innerHTML = `
+                    <div class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center z-20">
+                        <p class="text-xl leading-relaxed text-gray-200 mb-8 font-light z-10">
+                            Even if the whole world leaves you...<br><br>
+                            <span class="text-pink-300 font-medium">I'll still stay beside you.</span><br><br>
+                            Because seeing you smile is my favorite thing.
+                        </p>
+                        <button onclick="alert('Hug Sent! ❤️')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-10 rounded-full shadow-[0_0_30px_rgba(239,68,68,0.5)] flex items-center gap-2 mx-auto z-10 cursor-pointer">
+                            <i data-lucide="heart" class="fill-white"></i> Hug Me
+                        </button>
+                        <button onclick="renderStageMagicButtons(document.getElementById('appContainer'))" class="absolute bottom-10 text-gray-400 underline cursor-pointer z-10">Go Back</button>
+                    </div>
+                `;
+            } else if (type === 'miss') {
+                container.innerHTML = `
+                    <div class="absolute inset-0 bg-black flex flex-col items-center justify-center p-6 text-center z-20">
+                        ${renderStars(80)}
+                        <i data-lucide="moon" class="text-yellow-100 w-24 h-24 mb-10 opacity-90"></i>
+                        <p class="text-2xl font-dancing text-gray-200 leading-loose max-w-xs">
+                            Whenever you miss me...<br>Close your eyes.<br>Maybe I'm smiling while thinking about you too. ❤️
+                        </p>
+                        <button onclick="renderStageMagicButtons(document.getElementById('appContainer'))" class="absolute bottom-10 text-gray-400 underline cursor-pointer">Go Back</button>
+                    </div>
+                `;
+            } else if (type === 'smile') {
+                container.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-b from-pink-900 to-purple-900 flex flex-col items-center justify-center p-6 text-center z-20">
+                        <div class="glass-card p-8 w-full max-w-sm">
+                            <p class="text-lg text-white mb-8 font-medium">You have the cutest nose, the brightest eyes, and a smile that melts my heart. ✨</p>
+                            <button onclick="this.parentElement.innerHTML='<p class=\'text-2xl font-dancing text-pink-200\'>&quot;I knew you&apos;d look even prettier while smiling ❤️&quot;</p>'" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-8 rounded-full shadow-lg cursor-pointer">
+                                Smile Please 😊
+                            </button>
+                        </div>
+                        <button onclick="renderStageMagicButtons(document.getElementById('appContainer'))" class="absolute bottom-10 text-gray-400 underline cursor-pointer">Go Back</button>
+                    </div>
+                `;
+            } else if (type === 'sleep') {
+                container.innerHTML = `
+                    <div class="absolute inset-0 bg-[#050b14] flex flex-col items-center justify-center p-6 text-center z-20">
+                        <div class="glass-card bg-black/20 p-8 w-full max-w-sm border-white/5">
+                            <h3 class="text-3xl font-dancing text-blue-200 mb-6">Good Night Baby ❤️</h3>
+                            <p class="text-gray-300 leading-relaxed font-light">May your dreams be as beautiful as your smile.<br><br>I love you to the moon and back.</p>
+                        </div>
+                        <button onclick="renderStageMagicButtons(document.getElementById('appContainer'))" class="absolute bottom-10 text-gray-500 underline cursor-pointer">Go Back</button>
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // 6. Future Timeline
+        function renderStageTimeline(container) {
+            container.innerHTML = `
+                <div class="absolute inset-0 p-6 overflow-y-auto no-scrollbar flex flex-col pt-12 pb-24">
+                    <h2 class="text-3xl font-dancing text-pink-300 text-center mb-10">Our Journey</h2>
+                    <div class="relative w-full max-w-sm mx-auto">
+                        <div class="absolute left-[38px] top-4 bottom-4 w-1 bg-gradient-to-b from-pink-500/20 via-pink-500/50 to-pink-500/20 rounded-full"></div>
+                        <div class="flex flex-col gap-10">
+                            <div class="relative flex items-center gap-6">
+                                <div class="w-20 h-20 shrink-0 rounded-full glass-card flex items-center justify-center text-3xl z-10">❤️</div>
+                                <div><h3 class="font-semibold text-lg text-pink-300">First Meet</h3><p class="text-sm text-gray-400 mt-1">When my world stopped.</p></div>
+                            </div>
+                            <div class="relative flex items-center gap-6">
+                                <div class="w-20 h-20 shrink-0 rounded-full glass-card flex items-center justify-center text-3xl z-10">☕</div>
+                                <div><h3 class="font-semibold text-lg text-pink-300">Coffee Date</h3><p class="text-sm text-gray-400 mt-1">Endless talks & butterflies.</p></div>
+                            </div>
+                            <div class="relative flex items-center gap-6">
+                                <div class="w-20 h-20 shrink-0 rounded-full glass-card flex items-center justify-center text-3xl z-10">🎂</div>
+                                <div><h3 class="font-semibold text-lg text-pink-300">Birthday Together</h3><p class="text-sm text-gray-400 mt-1">Celebrating my favorite person.</p></div>
+                            </div>
+                            <div class="relative flex items-center gap-6">
+                                <div class="w-20 h-20 shrink-0 rounded-full glass-card flex items-center justify-center text-3xl z-10">✈️</div>
+                                <div><h3 class="font-semibold text-lg text-pink-300">Trips</h3><p class="text-sm text-gray-400 mt-1">Making core memories.</p></div>
+                            </div>
+                            <div class="relative flex items-center gap-6">
+                                <div class="w-20 h-20 shrink-0 rounded-full glass-card flex items-center justify-center text-3xl z-10">💍</div>
+                                <div><h3 class="font-semibold text-lg text-pink-300">Forever Together</h3><p class="text-sm text-gray-400 mt-1">This is just the beginning.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-16 flex justify-center">
+                        <button onclick="loadStage(6)" class="text-pink-400 flex flex-col items-center gap-2 hover:text-pink-300 cursor-pointer">
+                            <span>Continue</span><i data-lucide="chevron-down" class="animate-bounce"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 7. Sky Full of Stars
+        function renderStageStars(container) {
+            container.innerHTML = `
+                <div class="absolute inset-0 bg-black flex items-center justify-center p-6 text-center cursor-pointer" onclick="loadStage(7)">
+                    ${renderStars(150)}
+                    <div class="relative z-10">
+                        <p class="text-2xl font-dancing text-gray-200 leading-loose">
+                            Some people wish upon stars...<br><br>
+                            I already found mine.<br><br>
+                            <span class="text-4xl text-pink-300 animate-pulse-glow inline-block mt-4">It's You ❤️</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => loadStage(7), 7000);
+        }
+
+        // 8. Final Surprise
+        function renderStageFinalSurprise(container) {
+            container.innerHTML = `
+                <div class="absolute inset-0 bg-black flex flex-col items-center justify-center p-6 text-center">
+                    <div id="finalStep1">
+                        <i data-lucide="heart" class="w-24 h-24 text-red-600 fill-red-600 animate-pulse-glow"></i>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="absolute inset-0 bg-black flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                        <p class="text-2xl font-dancing text-gray-200 mb-8">Baby...<br>Before you leave...</p>
+                        <button onclick="revealFinalPhoto()" class="bg-transparent border-2 border-pink-500 text-pink-400 font-bold py-3 px-8 rounded-full hover:bg-pink-500/20 transition-colors cursor-pointer">
+                            Click Me ❤️
+                        </button>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        function revealFinalPhoto() {
+            const container = document.getElementById('appContainer');
+            container.innerHTML = `
+                <div class="absolute inset-0 bg-black flex flex-col items-center justify-center p-6 animate-fade-in">
+                    <div class="relative w-full max-w-sm aspect-[4/5] bg-gray-900 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(255,77,109,0.3)] mb-6 glass-card p-2">
+                        <img src="snapchat1.jpg" alt="Us" class="w-full h-full object-contain rounded-lg" onerror="this.src='https://images.unsplash.com/photo-1621252179027-94459d278660?auto=format&fit=crop&q=80'">
+                    </div>
+                    <div class="text-center">
+                        <h1 class="text-3xl font-dancing text-pink-400 mb-2">Happy Girlfriend's Day ❤️</h1>
+                        <p class="text-gray-300 font-light mb-1">Thank You For Existing.</p>
+                        <p class="text-pink-200 font-medium">I Love You So Much Baby.</p>
+                    </div>
+                    <button onclick="loadStage(8)" class="mt-8 text-gray-500 hover:text-pink-400 text-sm flex items-center gap-2 cursor-pointer">
+                        One last thing <i data-lucide="chevron-down" size="14"></i>
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // 9. Last Screen
+        function renderStageLastScreen(container) {
+            container.innerHTML = `
+                ${renderRosePetals()}
+                <div class="absolute inset-0 bg-black flex flex-col items-center justify-center p-6 text-center">
+                    <div class="relative flex items-center justify-center w-64 h-64 mb-6">
+                        <i data-lucide="heart" class="absolute inset-0 w-full h-full text-red-500 fill-red-500 animate-pulse-glow" style="width:100%; height:100%;"></i>
+                        <span class="relative z-10 text-4xl font-bold text-white tracking-widest mt-[-10px]">ANSHIMA</span>
+                    </div>
+                    <div class="mb-12">
+                        <p class="text-gray-400 text-sm tracking-widest uppercase mb-1">Forever Yours</p>
+                        <p class="text-2xl font-dancing text-pink-300">ARYAN</p>
+                    </div>
+                    <div class="glass-card p-6 bg-black/40 border-pink-500/20 max-w-sm">
+                        <p class="text-sm font-light text-gray-300 italic leading-relaxed">
+                            "No matter how many pages this website has... my favorite chapter will always be 'Us'. ❤️"
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize First Stage
+        window.onload = () => {
+            loadStage(0);
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
+
+```
